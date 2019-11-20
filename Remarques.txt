@@ -1,0 +1,151 @@
+Remarques générales :
+uniform correspond à un mot clé : les variables uniform gardent la même valeur mais peuvent être lues par tous les threads (les pixels, fragments)
+varying correspond à un mot clé : les variables varying sont propres et internes à chaque pixel de l'écran, et peuvent contenir toutes 
+sortes d'info (genre la velocité etc)
+
+gl_FragColor permet de modifier les couleurs affichées sous la forme d'un vec4 (R, G, B, A)
+les "fragment shaders" ont besoin d'une précision pour parse les données affichées (genre la couleur, vélocité, etc). Pour ça on doit lui en
+donner une, d'où les "precision mediump float;"
+Les buffers sont les données binaires envoyées au GPU. Les attributs vont piochers dans les buffers pour lire les données : par exemple
+chaque fois qu'on exécute le vertex shader, les prochaines données de chaque buffers sont insérées dans les attributes.
+
+fbo = frameBufferObject
+Texture2D(a, b) permet de créer une texture en 2 dimension ayant pour première dimension a, et pour 2e b, mais il reste je pense une
+subtilité que je n'ai pas compris 
+
+PS : Tiens, ce serait bien d'essayer de rajouter une option pour faire joujou avec la masse volumique du fluide (rajouter un 1/ro dans le
+shader du gradient, et dans celui du rotationnel)
+
+Illumination divine : 
+
+En fait, on ne gère AUCUN mouvement à l'écran, on ne fait que modifier les couleurs de chaque pixel, donnant une impression de mouvement
+On peut voir les textures comme aussi un moyen de stocker des données
+Normalement en WebGL, le (0,0) est le centre, et l'axe x va de [-1, 1]. CE N'EST PAS LE CAS DANS NOTRE SIMULATION, LES COO SONT NORMALISEES
+
+
+
+
+Analyse des shaders :
+
+advection.fs :
+
+C'est un peu le bordel, mais je pense que c'est le shader qui gère la dissipation (le fait que ça devient de moins en moins lumineux au fil
+du temps).
+
+baseVertex.vs :
+
+C'est un des shaders principaux : il gère tout ce qui est position et en crée la vitesse (notamment). De plus, il normalise les coordonnées :
+Les coo normalisées sont stockées dans vUv : le (0,0) est en bas à gauche, et (1,1) correspond à en haut à droite.
+La variable aPosition est là pour dire "absolute position", donc dans le repère non normalisé.
+Son role n'est pas un rôle de modification (il n'affiche rien d'autre que le même écran), mais d'update (il calcule la vitesse).
+Nevertheless, je ne sais pas à quoi correspond texelSize pour le moment. Peut être que c'est une variable nourrie automatiquement? 
+
+bloomBlur.fs, bloomfinal.fs : 
+
+Fais simplement la somme des 4 vitesses et la normalise avec le coef *0.25. ça permet, je pense de gérer le floutage au fil du temps des 
+couleurs pétantes (le bloom quoi) et multiplie encore par l'intensité pour ce qui est du bloomfinal.fs
+
+bloomPrefilter.fs :
+
+Oulah, c'est un bordel monstre ce truc. Je sais pas ce que ça fait dans le détail, mais de ce que j'ai vu, c'est le shader qui crée et 
+définit sur quels éléments appliquer le bloomblur des shaders bloomBlur.fs et bloomFinal.fs
+
+blur.fs :
+
+Shader qui gère la modification de couleur/dissipation en fonction de la vitesse (mais ça reste étrange)
+
+blurVertex.vs :
+
+C'est le 2e shader principal : il fais globalement la même chose que baseVertex.vs, sauf qu'il ne traite que vL et vR en leur ajoutant
+un terme de compensation (pourquoi 4/3? Je ne sais pas). Il est uniquement relié au shader blur.fs, tandis que tous les autres s'appuient
+sur baseVertex.vs
+
+checkerboard.fs :
+
+Honnêtement, j'ai aucune idée de son influence, que j'enlève la ligne de normalisation de v ou pas, ça m'a l'air de faire la même
+chose, mais bon
+
+clear.fs : 
+
+Permet de gérer l'influence de la pression sur la dissipation des tourbillons : pression*vitesse en fonction de la pression. Une haute valeur
+de pression fera disparaître les petits tourbillons et le forcera à se merge dans des gros, donc on aura presque que des gros tourbillons, 
+tandis qu'une petite valeur de pression favorisera les petits tourbillons
+
+color.fs : 
+
+ça affiche la couleur du fond. couleur = vec4 (color.r, color.g, color.b, 1.0) où color est un vec4 qui représente la couleur du fond.
+
+copy.fs :
+
+Encore un truc obscur qui gère la couleur 
+
+curl.fs :
+
+uVelocity correspond à la variable qui va échantillonner la vélocité d'un point de la grille : une bébé texture.
+Calcul de la vorticity en 2D dans le système cartésien. En effet, on retrouve bien le simple calcul du rotationnel :
+dVy/dx - dVx/dy
+
+dVx/dy = T - B 		T et B sont des Texture2D(..).x (d'où le Vx) et sont orientées sur l'axe y (haut et bas)
+dVy/dx = R - L		R et L sont des Texture2D(..).y (d'où le Vy) et sont orientées sur l'axe x (gauche et droite)
+Le terme *0.5 dans la dernière ligne permet de renormaliser les coordonnées dans le carré (0,0) (1,1)
+
+display.fs :
+
+C'est tout ce qui gère l'affichage à l'écran pour faire un truc joli je pense, mais faudra qu'on voit ça ensemble, ça me fait peur..
+
+divergence.fs :
+
+Calcul de la divergence en 2D dans le système cartésien de la vitesse du fluide.
+dVx/dx + dVy/dy
+
+dVx/dx = R - L		R et L sont des Texture2D(..).x (d'où le Vx) et sont orientées sur l'axe x (gauche et droite)
+dVy/dy = T - B		Bon t'as compris quoi
+Le terme *0.5 permet juste de renormaliser les coordonnées ici aussi.
+Les 4 if représentent les effets de bords : si on une des vitesses pointe vers une bordure, on inverse son sens et problème réglé.
+Supprimer ces lignes cause le système à partir en couille. Je ne sais pas pourquoi : peut être en revenant à l'équadiff, on aurait une solution
+instable d'après le critère de Rooth-Hurwitz, ou bien c'est qu'un autre shader s'en mêle, le vilain.
+J'ai l'impression que remplacer les lignes par ça règle "légèrement" le problème, mais faut y croire pour le voir, donc mieux vaut trouver mieux
+vec2 C = texture2D(uVelocity, vUv).xy;
+    if (vL.x < 0.0) { L = -0.1; }
+    if (vR.x > 1.0) { R = 1.1; }
+    if (vT.y > 1.0) { T = 1.1; }
+    if (vB.y < 0.0) { B = -0.1; }
+
+gradientSubtract.fs :
+
+J'ai un peu de mal à scerner ce que ça fait sur le plan physique... ça calculer la vélocité(->) = vitesse(->) - grad(->) ? 
+Je pense qu'il s'agit du terme avec le gradient dans l'équation de Navier-Stokes, et si je me souviens bien il dépend bien de la pression :
+cf aussi la page 10 de cet article : https://hal.archives-ouvertes.fr/hal-01527818/document
+Hypothèse : c'est à cause de ce script qu'enlever les effets de bords est casse couille. La vélocité devient de plus en plus grande
+d'où les impressions de forts courants que ça crée.
+
+pressure.fs : 
+
+Ici, L, R, T, B dépendent de la pression elle même. Donc je dirais que L + R + T + B correspond au terme p° dans la page 10 (en comptant la
+page de couverture), équation 21 de cet article https://hal.archives-ouvertes.fr/hal-01527818/document et le divergence à l'autre terme (en considérant
+que dt/(Ki*T) = 1
+Donc ce script calcule la pression dans le cadre de l'équation de Navier Stokes en discret.
+
+splat.fs :
+
+C'est juste ce qui fait le joli splats ! La dernière ligne prend l'écran actuel et lui rajoute le splat dessus, et l'affiche à la place de
+l'ancien.
+
+sunrays.fs et sunraysMask.fs :
+
+C'est juste des trucs pour faire joli, rien de physique derrière, surtout qu'on peut désactiver l'option dans le GUI
+
+vorticity.fs : 
+
+force /= length(force) + 0.0001 permet simplement de rendre le vecteur force unitaire.
+Permet de calculer le terme en - nabla vectoriel (...) de l'équation 21 si je me trompe pas, c'est un peu dur à voir mais y a que ça qui va.
+
+
+
+
+Programmes en js :
+
+blit.js :
+
+Permet de définir la zone d'affichage sous forme de côté d'un triangle : mettre la valeur sur 3 fera que seul la forme d'un triangle sera gérée
+sur l'écran
