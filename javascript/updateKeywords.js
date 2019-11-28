@@ -6,5 +6,6 @@ export default function updateKeywords () {
   if (config.SHADING) { displayKeywords.push('SHADING') }
   if (config.BLOOM) { displayKeywords.push('BLOOM') }
   if (config.SUNRAYS) { displayKeywords.push('SUNRAYS') }
+  if (config.Obs_present) {displayKeywords.push('Obs_present')}
   displayMaterial.setKeywords(displayKeywords)
 }

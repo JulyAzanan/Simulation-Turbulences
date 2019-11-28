@@ -40,7 +40,9 @@ export default function update (webGLContext) {
   if (!config.PAUSED) { step(webGLContext, dt) }
   render(webGLContext, config, null)
   stats.end()
-  requestAnimationFrame(() => update(webGLContext))
+  setTimeout(function() {
+    requestAnimationFrame(() => update(webGLContext))
+  }, 1)
 }
 
 function step (webGLContext, dt) {
@@ -98,6 +100,35 @@ function step (webGLContext, dt) {
   if (!ext.supportLinearFiltering) {
     gl.uniform2f(programs.advection.uniforms.dyeTexelSize, buffers.velocity.texelSizeX, buffers.velocity.texelSizeY)
   }
+  if (config.Obs_present_rect) {
+    gl.uniform1f(programs.advection.uniforms.x_centre_rect, config.x_centre_rect)
+    gl.uniform1f(programs.advection.uniforms.y_centre_rect, config.y_centre_rect)
+    gl.uniform1f(programs.advection.uniforms.x_long, config.x_long)
+    gl.uniform1f(programs.advection.uniforms.y_long, config.y_long)
+  }
+  else
+  {
+    gl.uniform1f(programs.advection.uniforms.x_centre_rect, config.x_centre_rect)
+    gl.uniform1f(programs.advection.uniforms.y_centre_rect, config.y_centre_rect)
+    gl.uniform1f(programs.advection.uniforms.x_long, 0.0)
+    gl.uniform1f(programs.advection.uniforms.y_long, 0.0)
+  }
+   if (config.Obs_present_cer) {
+    gl.uniform1f(programs.advection.uniforms.x_centre_cer, config.x_centre_cer)
+    gl.uniform1f(programs.advection.uniforms.y_centre_cer, config.y_centre_cer)
+    gl.uniform1f(programs.advection.uniforms.x_stretch, config.x_stretch)
+    gl.uniform1f(programs.advection.uniforms.y_stretch, config.y_stretch)
+    gl.uniform1f(programs.advection.uniforms.rayon, config.rayon)
+  }
+  else
+  {
+    gl.uniform1f(programs.advection.uniforms.x_centre_cer, config.x_centre_cer)
+    gl.uniform1f(programs.advection.uniforms.y_centre_cer, config.y_centre_cer)
+    gl.uniform1f(programs.advection.uniforms.x_stretch, config.x_stretch)
+    gl.uniform1f(programs.advection.uniforms.y_stretch, config.y_stretch)
+    gl.uniform1f(programs.advection.uniforms.rayon, 0.0)
+  } 
+
   const velocityId = buffers.velocity.read.attach(0)
   gl.uniform1i(programs.advection.uniforms.uVelocity, velocityId)
   gl.uniform1i(programs.advection.uniforms.uSource, velocityId)

@@ -11,5 +11,6 @@ void main () {
     float offset = 1.33333333;
     vL = vUv - texelSize * offset;
     vR = vUv + texelSize * offset;
+
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }

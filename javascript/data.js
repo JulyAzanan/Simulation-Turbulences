@@ -40,5 +40,16 @@ export const config = {
   SUNRAYS_RESOLUTION: 196,
   SUNRAYS_WEIGHT: 1.0,
   x_vitesse : 0.0,
-  y_vitesse : 0.0
+  y_vitesse : 0.0,
+  x_centre_rect : 0.0,
+  y_centre_rect : 0.0,
+  x_long : 0.3,
+  y_long : 0.3,
+  Obs_present_rect : false,
+  x_centre_cer : 0.5,
+  y_centre_cer : 0.5,
+  x_stretch : 0.3,
+  y_stretch : 0.3,
+  Obs_present_cer : false,
+  rayon : 0.1
 }
