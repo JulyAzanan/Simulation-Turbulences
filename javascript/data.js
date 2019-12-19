@@ -51,5 +51,6 @@ export const config = {
   x_stretch : 0.3,
   y_stretch : 0.3,
   Obs_present_cer : false,
-  rayon : 0.1
+  rayon : 0.1,
+  Temps : 1
 }

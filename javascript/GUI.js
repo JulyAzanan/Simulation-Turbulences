@@ -2,7 +2,8 @@ import { initFramebuffers } from './initBuffers.js'
 import updateKeywords from './updateKeywords.js'
 import captureScreenshot from './screenshot.js'
 import { splatStack, config } from './data.js'
-/* global dat */
+import { generateColor } from './updateColors.js'
+import { splat } from './splats.js'
 
 export default function startGUI (webGLContext) {
   const gui = new dat.GUI({ width: 350 })
@@ -18,6 +19,7 @@ export default function startGUI (webGLContext) {
   gui.add(config, 'SHADING').name('Ombres').onFinishChange(updateKeywords)
   gui.add(config, 'COLORFUL').name('Coloré')
   gui.add(config, 'PAUSED').name('Pause').listen()
+  gui.add(config, 'Temps', 1, 1000).name('Temps')
 
   gui.add({
     fun: function () {
@@ -31,23 +33,23 @@ export default function startGUI (webGLContext) {
   bloomFolder.add(config, 'BLOOM_THRESHOLD', 0.0, 1.0).name('threshold')
 
   const VitesseInitiale = gui.addFolder('Vitesse du milieu')
-  VitesseInitiale.add(config, 'x_vitesse', -2.0, 2.0).name('Selon x')
-  VitesseInitiale.add(config, 'y_vitesse', -2.0, 2.0).name('Selon y')
+  VitesseInitiale.add(config, 'x_vitesse', -2.0, 2.0).step(0.1).name('Selon x')
+  VitesseInitiale.add(config, 'y_vitesse', -2.0, 2.0).step(0.1).name('Selon y')
 
   const Obstacle = gui.addFolder('Obstacle')
   const Rectangle = Obstacle.addFolder('Rectangle')
   Rectangle.add(config, 'Obs_present_rect').name('Placer obstacle').onFinishChange(updateKeywords)
-  Rectangle.add(config, 'x_centre_rect', -1.0, 1.0).name('Abscisse du centre')
-  Rectangle.add(config, 'y_centre_rect', -1.0, 1.0).name('Ordonnée du centre')
-  Rectangle.add(config, 'x_long', 0.0, 1.0).name('Abscisse de la longueur')
-  Rectangle.add(config, 'y_long', 0.0, 1.0).name('Ordonnée de la longueur')
+  Rectangle.add(config, 'x_centre_rect', -1.0, 1.0).step(0.1).name('Abscisse du centre')
+  Rectangle.add(config, 'y_centre_rect', -1.0, 1.0).step(0.1).name('Ordonnée du centre')
+  Rectangle.add(config, 'x_long', 0.0, 1.0).step(0.01).name('Longueur selon x')
+  Rectangle.add(config, 'y_long', 0.0, 1.0).step(0.01).name('Longueur selon y')
   const Cercle = Obstacle.addFolder('Cercle')
   Cercle.add(config, 'Obs_present_cer').name('Placer obstacle').onFinishChange(updateKeywords)
-  Cercle.add(config, 'x_centre_cer', 0.0, 1.0).name('Abscisse du centre')
-  Cercle.add(config, 'y_centre_cer', 0.0, 1.0).name('Ordonnée du centre')
-  Cercle.add(config, 'x_stretch', 0.0, 1.0).name('Abscisse de la longueur')
-  Cercle.add(config, 'y_stretch', 0.0, 1.0).name('Ordonnée de la longueur')
-  Cercle.add(config, 'rayon', 0.0, 1.0).name('Rayon')
+  Cercle.add(config, 'x_centre_cer', 0.0, 1.0).step(0.1).name('Abscisse du centre')
+  Cercle.add(config, 'y_centre_cer', 0.0, 1.0).step(0.1).name('Ordonnée du centre')
+  Cercle.add(config, 'x_stretch', 0.0, 1.0).step(0.01).name('Excentricité selon x')
+  Cercle.add(config, 'y_stretch', 0.0, 1.0).step(0.01).name('Excentricité selon y')
+  Cercle.add(config, 'rayon', 0.0, 1.0).step(0.01).name('Rayon')
 
   const sunraysFolder = gui.addFolder('Rayons')
   sunraysFolder.add(config, 'SUNRAYS').name('enabled').onFinishChange(updateKeywords)

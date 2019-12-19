@@ -17,6 +17,6 @@ void main () {
     float T = texture2D(uPressure, vT).x;
     float B = texture2D(uPressure, vB).x;
     vec2 velocity = texture2D(uVelocity, vUv).xy;
-    velocity.xy -= vec2(R - L + x_vitesse, T - B + y_vitesse);    
+    velocity.xy -= vec2(R - L - x_vitesse, T - B - y_vitesse);    
     gl_FragColor = vec4(velocity, 0.0, 1.0);
 }

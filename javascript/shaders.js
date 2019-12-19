@@ -56,19 +56,19 @@ function compileShaders (gl, list) {
 export function compileShader (gl, shaderType, source, keywords) {
   source = addKeywords(source, keywords)
 
-  // Create the shader object
+  // Crée l'objet Shader
   const shader = gl.createShader(shaderType)
 
-  // Load the shader source
+  // Charge la source du shader 
   gl.shaderSource(shader, source)
 
-  // Compile the shader
+  // Compile le shader
   gl.compileShader(shader)
 
-  // Check the compile status
+  // Vérifis le status de la compilation
   const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
   if (!compiled && !gl.isContextLost()) {
-    // Something went wrong during compilation; get the error
+    // Quelque chose s'est mal passé : on récupère l'erreur 
     var error = gl.getShaderInfoLog(shader)
     console.log("*** Erreur en compilant le shader '" + source + "':" + error)
     gl.deleteShader(shader)

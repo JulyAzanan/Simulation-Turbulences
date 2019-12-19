@@ -6,7 +6,6 @@ import { updateColors } from './updateColors.js'
 import { applyInputs } from './splats.js'
 import render from './render.js'
 import blit from './blit.js'
-/* global requestAnimationFrame, Stats */
 
 let lastUpdateTime = Date.now()
 
@@ -42,7 +41,7 @@ export default function update (webGLContext) {
   stats.end()
   setTimeout(function() {
     requestAnimationFrame(() => update(webGLContext))
-  }, 1)
+  }, config.Temps)
 }
 
 function step (webGLContext, dt) {

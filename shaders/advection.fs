@@ -33,14 +33,11 @@ vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
 }
 
 void main () {
-   /*  float x_centre2 = 0.5;
-    float y_centre2 = 0.5;
-    float x_long2 = 0.2;
-    float y_long2 = 0.2; */
     vec2 vUv2 = vUv;
     if (abs(vUv.x - x_centre_rect) < (0.5 + x_long) && abs(vUv.x - x_centre_rect) > (0.5 - x_long) && abs(vUv.y - y_centre_rect) < (0.5 + y_long) && abs(vUv.y - y_centre_rect) > (0.5 - y_long)) {vUv2 = vec2(0.0);}
      
     if (((vUv.x - x_centre_cer)*(vUv.x - x_centre_cer) / x_stretch) + ((vUv.y - y_centre_cer)*(vUv.y - y_centre_cer) / y_stretch) < rayon) {vUv2 = vec2(0.0);}
+
 
 
 #ifdef MANUAL_FILTERING
